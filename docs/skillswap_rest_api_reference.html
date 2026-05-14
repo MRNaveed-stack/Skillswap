@@ -1,0 +1,320 @@
+
+<h2 class="sr-only">SkillSwap REST API Reference — interactive documentation for all endpoints grouped by module</h2>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-mono); }
+.wrap { padding: 1rem 0; }
+.nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.5rem; }
+.nav-btn { font-family: var(--font-sans); font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-secondary); cursor: pointer; transition: all 0.15s; }
+.nav-btn.active { background: var(--color-background-secondary); color: var(--color-text-primary); border-color: var(--color-border-primary); }
+.endpoint-list { display: flex; flex-direction: column; gap: 10px; }
+.ep { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+.ep-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; background: var(--color-background-primary); user-select: none; }
+.ep-header:hover { background: var(--color-background-secondary); }
+.method { font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 4px; min-width: 52px; text-align: center; font-family: var(--font-mono); }
+.GET { background: #EAF3DE; color: #3B6D11; }
+.POST { background: #E6F1FB; color: #185FA5; }
+.PUT { background: #FAEEDA; color: #854F0B; }
+.DELETE { background: #FCEBEB; color: #A32D2D; }
+.PATCH { background: #EEEDFE; color: #534AB7; }
+.ep-path { font-family: var(--font-mono); font-size: 13px; color: var(--color-text-primary); flex: 1; }
+.ep-desc { font-family: var(--font-sans); font-size: 12px; color: var(--color-text-secondary); }
+.auth-badge { font-size: 11px; padding: 2px 7px; border-radius: 4px; border: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); }
+.chevron { font-size: 14px; color: var(--color-text-tertiary); transition: transform 0.2s; }
+.ep-body { display: none; border-top: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); padding: 14px 16px; }
+.ep-body.open { display: block; }
+.ep.open .chevron { transform: rotate(180deg); }
+.tabs { display: flex; gap: 0; margin-bottom: 12px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.tab { font-family: var(--font-sans); font-size: 12px; padding: 6px 14px; cursor: pointer; color: var(--color-text-secondary); border: none; background: transparent; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab.active { color: var(--color-text-primary); border-bottom-color: var(--color-text-primary); }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+pre { font-family: var(--font-mono); font-size: 12px; background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 12px; white-space: pre-wrap; word-break: break-word; color: var(--color-text-primary); line-height: 1.6; }
+.sc-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 6px; font-family: var(--font-sans); font-size: 13px; }
+.sc { font-family: var(--font-mono); font-size: 12px; padding: 2px 7px; border-radius: 4px; }
+.sc-2xx { background: #EAF3DE; color: #3B6D11; }
+.sc-4xx { background: #FAEEDA; color: #854F0B; }
+.sc-5xx { background: #FCEBEB; color: #A32D2D; }
+.sc-desc { color: var(--color-text-secondary); }
+.section-label { font-family: var(--font-sans); font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+.auth-note { font-family: var(--font-sans); font-size: 12px; background: var(--color-background-info); color: var(--color-text-info); border-radius: var(--border-radius-md); padding: 10px 14px; margin-bottom: 1.5rem; }
+</style>
+
+<div class="wrap">
+<div class="auth-note"><i class="ti ti-lock" style="font-size:14px;vertical-align:-2px;margin-right:6px" aria-hidden="true"></i><strong>Auth flow:</strong> Register → Login → receive <code>access_token</code> (JWT, 60min) + <code>refresh_token</code> (30d) → send <code>Authorization: Bearer {access_token}</code> on all 🔒 endpoints → call <code>POST /auth/refresh</code> to rotate tokens.</div>
+
+<div class="nav" id="nav"></div>
+<div class="endpoint-list" id="list"></div>
+</div>
+
+<script>
+const AUTH = "🔒 JWT required";
+const OPEN = "public";
+
+const modules = [
+  { id: "auth", label: "Auth", color: "#185FA5", endpoints: [
+    { method:"POST", path:"/api/auth/register", desc:"Register new user", auth:OPEN,
+      req:`{\n  "name": "Aisha Raza",\n  "email": "aisha@example.com",\n  "password": "Min8Chars!",\n  "password_confirmation": "Min8Chars!"\n}`,
+      res:`{\n  "message": "Verification email sent.",\n  "user": {\n    "id": 1,\n    "name": "Aisha Raza",\n    "email": "aisha@example.com",\n    "email_verified": false,\n    "created_at": "2025-05-07T10:00:00Z"\n  }\n}`,
+      codes: [["201","User created, email verification sent"],["422","Validation error"],["409","Email already registered"]]
+    },
+    { method:"POST", path:"/api/auth/login", desc:"Login & receive tokens", auth:OPEN,
+      req:`{\n  "email": "aisha@example.com",\n  "password": "Min8Chars!"\n}`,
+      res:`{\n  "access_token": "eyJ0eXAiOiJKV1Q...",\n  "token_type": "Bearer",\n  "expires_in": 3600,\n  "refresh_token": "def50200...",\n  "user": {\n    "id": 1,\n    "name": "Aisha Raza",\n    "role": "mentor",\n    "credits": 50\n  }\n}`,
+      codes: [["200","Login success"],["401","Invalid credentials"],["403","Email not verified"]]
+    },
+    { method:"POST", path:"/api/auth/refresh", desc:"Rotate access token", auth:OPEN,
+      req:`{\n  "refresh_token": "def50200..."\n}`,
+      res:`{\n  "access_token": "eyJ0eXAiOiJKV1Q...",\n  "expires_in": 3600\n}`,
+      codes: [["200","New access token issued"],["401","Refresh token invalid or expired"]]
+    },
+    { method:"POST", path:"/api/auth/logout", desc:"Revoke tokens", auth:AUTH,
+      req:`{\n  "refresh_token": "def50200..."\n}`,
+      res:`{\n  "message": "Logged out successfully."\n}`,
+      codes: [["200","Tokens revoked"],["401","Unauthenticated"]]
+    },
+    { method:"POST", path:"/api/auth/forgot-password", desc:"Request password reset", auth:OPEN,
+      req:`{\n  "email": "aisha@example.com"\n}`,
+      res:`{\n  "message": "Reset link sent if email is registered."\n}`,
+      codes: [["200","Email sent (always, to prevent enumeration)"]]
+    },
+    { method:"POST", path:"/api/auth/reset-password", desc:"Submit new password", auth:OPEN,
+      req:`{\n  "token": "abc123...",\n  "email": "aisha@example.com",\n  "password": "NewPass!9",\n  "password_confirmation": "NewPass!9"\n}`,
+      res:`{\n  "message": "Password reset successful."\n}`,
+      codes: [["200","Password updated"],["422","Token invalid or expired"]]
+    },
+    { method:"GET", path:"/api/auth/verify-email/{id}/{hash}", desc:"Email verification callback", auth:OPEN,
+      req:`— (URL params only)`,
+      res:`{\n  "message": "Email verified successfully."\n}`,
+      codes: [["200","Verified"],["400","Invalid or expired link"]]
+    },
+  ]},
+  { id: "profile", label: "Profile", color: "#3B6D11", endpoints: [
+    { method:"GET", path:"/api/profile", desc:"Get own profile", auth:AUTH,
+      req:`— (no body)`,
+      res:`{\n  "id": 1,\n  "name": "Aisha Raza",\n  "bio": "Full-stack dev. 5yr XP.",\n  "avatar_url": "https://cdn.skillswap.io/avatars/1.jpg",\n  "interests": ["Python","Design"],\n  "credits": 50,\n  "reputation_score": 87.4,\n  "skills": [...]\n}`,
+      codes: [["200","Profile returned"],["401","Unauthenticated"]]
+    },
+    { method:"PUT", path:"/api/profile", desc:"Update profile", auth:AUTH,
+      req:`{\n  "name": "Aisha Raza",\n  "bio": "Full-stack dev, open source contributor.",\n  "interests": ["Python","Design","ML"]\n}`,
+      res:`{\n  "message": "Profile updated.",\n  "profile": { ...updated fields }\n}`,
+      codes: [["200","Updated"],["422","Validation error"]]
+    },
+    { method:"POST", path:"/api/profile/avatar", desc:"Upload profile picture", auth:AUTH,
+      req:`multipart/form-data\n{\n  "avatar": <file: jpg|png|webp, max 2MB>\n}`,
+      res:`{\n  "avatar_url": "https://cdn.skillswap.io/avatars/1.jpg"\n}`,
+      codes: [["200","Avatar uploaded"],["422","Invalid file type or size"]]
+    },
+    { method:"GET", path:"/api/users/{id}", desc:"View any user's public profile", auth:AUTH,
+      req:`— (URL param: user id)`,
+      res:`{\n  "id": 5,\n  "name": "Bilal Ahmed",\n  "bio": "...",\n  "skills": [...],\n  "reputation_score": 92.1,\n  "total_sessions": 34,\n  "avg_rating": 4.8\n}`,
+      codes: [["200","Public profile returned"],["404","User not found"]]
+    },
+  ]},
+  { id: "skills", label: "Skills", color: "#854F0B", endpoints: [
+    { method:"GET", path:"/api/skills", desc:"Browse all skills (paginated)", auth:AUTH,
+      req:`Query params:\n  ?search=python\n  &category=programming\n  &experience=intermediate\n  &page=1&per_page=20`,
+      res:`{\n  "data": [\n    {\n      "id": 12,\n      "title": "Python for Data Science",\n      "description": "NumPy, Pandas, Matplotlib.",\n      "category": "programming",\n      "experience_level": "intermediate",\n      "mentor": { "id":5, "name":"Bilal Ahmed", "rating":4.8 }\n    }\n  ],\n  "meta": { "total":80, "page":1, "per_page":20 }\n}`,
+      codes: [["200","Skill listings returned"],["401","Unauthenticated"]]
+    },
+    { method:"POST", path:"/api/skills", desc:"Publish a new skill (mentor)", auth:AUTH,
+      req:`{\n  "title": "Python for Data Science",\n  "description": "NumPy, Pandas, Matplotlib.",\n  "category": "programming",\n  "experience_level": "intermediate",\n  "credits_per_session": 10,\n  "tags": ["python","data","ml"]\n}`,
+      res:`{\n  "message": "Skill published.",\n  "skill": { "id": 15, ...skill fields }\n}`,
+      codes: [["201","Skill created"],["422","Validation error"]]
+    },
+    { method:"PUT", path:"/api/skills/{id}", desc:"Update own skill", auth:AUTH,
+      req:`{\n  "title": "Advanced Python",\n  "credits_per_session": 15\n}`,
+      res:`{\n  "message": "Skill updated.",\n  "skill": { ...updated fields }\n}`,
+      codes: [["200","Updated"],["403","Not skill owner"],["404","Skill not found"]]
+    },
+    { method:"DELETE", path:"/api/skills/{id}", desc:"Remove own skill", auth:AUTH,
+      req:`— (no body)`,
+      res:`{\n  "message": "Skill removed."\n}`,
+      codes: [["200","Deleted"],["403","Not skill owner"],["404","Not found"]]
+    },
+  ]},
+  { id: "matching", label: "Matching", color: "#534AB7", endpoints: [
+    { method:"GET", path:"/api/mentors/match", desc:"Get top-K ranked mentors (Heap + weighted score)", auth:AUTH,
+      req:`Query params:\n  ?skill=python\n  &top_k=10\n  &availability=2025-05-09T10:00:00Z`,
+      res:`{\n  "mentors": [\n    {\n      "rank": 1,\n      "user_id": 5,\n      "name": "Bilal Ahmed",\n      "skill_relevance": 0.95,\n      "rating": 4.9,\n      "experience_years": 5,\n      "response_rate": 0.98,\n      "composite_score": 94.3,\n      "available": true,\n      "credits_per_session": 12\n    }\n  ]\n}`,
+      codes: [["200","Ranked mentor list"],["400","Missing skill param"]]
+    },
+    { method:"GET", path:"/api/mentors/{id}/score", desc:"Detailed matching score breakdown", auth:AUTH,
+      req:`Query params:\n  ?skill_id=12`,
+      res:`{\n  "user_id": 5,\n  "scores": {\n    "skill_relevance": 0.95,\n    "rating_weight": 0.88,\n    "experience_weight": 0.80,\n    "availability_weight": 1.0,\n    "response_rate": 0.98\n  },\n  "composite_score": 94.3,\n  "algorithm": "weighted_heap_O(n_log_k)"\n}`,
+      codes: [["200","Score breakdown"],["404","Mentor not found"]]
+    },
+  ]},
+  { id: "sessions", label: "Sessions", color: "#185FA5", endpoints: [
+    { method:"POST", path:"/api/sessions/request", desc:"Learner requests a session", auth:AUTH,
+      req:`{\n  "mentor_id": 5,\n  "skill_id": 12,\n  "proposed_time": "2025-05-09T10:00:00Z",\n  "duration_minutes": 60,\n  "note": "I'd like help with Pandas DataFrames."\n}`,
+      res:`{\n  "message": "Session request sent.",\n  "session": {\n    "id": 101,\n    "status": "pending",\n    "learner_id": 1,\n    "mentor_id": 5,\n    "proposed_time": "2025-05-09T10:00:00Z",\n    "credits_held": 12\n  }\n}`,
+      codes: [["201","Request created, credits held"],["402","Insufficient credits"],["409","Time conflict"]]
+    },
+    { method:"PUT", path:"/api/sessions/{id}/respond", desc:"Mentor accepts or rejects", auth:AUTH,
+      req:`{\n  "action": "accept",\n  "confirmed_time": "2025-05-09T10:00:00Z"\n}\n// or\n{\n  "action": "reject",\n  "reason": "Not available that day."\n}`,
+      res:`{\n  "message": "Session accepted.",\n  "session": {\n    "id": 101,\n    "status": "confirmed",\n    "confirmed_time": "2025-05-09T10:00:00Z"\n  }\n}`,
+      codes: [["200","Responded"],["403","Not the assigned mentor"],["404","Session not found"]]
+    },
+    { method:"GET", path:"/api/sessions", desc:"List own sessions (learner or mentor)", auth:AUTH,
+      req:`Query params:\n  ?role=learner  // or mentor\n  &status=confirmed\n  &page=1`,
+      res:`{\n  "data": [\n    {\n      "id": 101,\n      "status": "confirmed",\n      "skill": { "id":12, "title":"Python for Data Science" },\n      "other_party": { "id":5, "name":"Bilal Ahmed" },\n      "confirmed_time": "2025-05-09T10:00:00Z",\n      "credits": 12\n    }\n  ],\n  "meta": { "total":5, "page":1 }\n}`,
+      codes: [["200","Sessions list"]]
+    },
+    { method:"POST", path:"/api/sessions/{id}/complete", desc:"Mark session as completed", auth:AUTH,
+      req:`— (no body, both parties confirm)`,
+      res:`{\n  "message": "Session completed.",\n  "credits_transferred": 12,\n  "mentor_new_balance": 62,\n  "learner_new_balance": 38\n}`,
+      codes: [["200","Completed, credits transferred"],["403","Not a session participant"],["409","Already completed"]]
+    },
+    { method:"GET", path:"/api/availability", desc:"Get own availability slots", auth:AUTH,
+      req:`— (no body)`,
+      res:`{\n  "slots": [\n    { "id":1, "day":"monday", "start":"09:00", "end":"12:00" },\n    { "id":2, "day":"wednesday", "start":"14:00", "end":"18:00" }\n  ]\n}`,
+      codes: [["200","Slots returned"]]
+    },
+    { method:"POST", path:"/api/availability", desc:"Add availability slot (mentor)", auth:AUTH,
+      req:`{\n  "day": "friday",\n  "start": "10:00",\n  "end": "14:00",\n  "timezone": "Asia/Karachi"\n}`,
+      res:`{\n  "message": "Slot added.",\n  "slot": { "id":3, "day":"friday", "start":"10:00", "end":"14:00" }\n}`,
+      codes: [["201","Slot added"],["409","Overlaps existing slot"],["422","Invalid time range"]]
+    },
+  ]},
+  { id: "messaging", label: "Messages", color: "#0F6E56", endpoints: [
+    { method:"GET", path:"/api/conversations", desc:"List all conversations", auth:AUTH,
+      req:`— (no body)`,
+      res:`{\n  "conversations": [\n    {\n      "id": 7,\n      "with_user": { "id":5, "name":"Bilal Ahmed", "avatar":"..." },\n      "last_message": "See you at 10!",\n      "last_at": "2025-05-07T08:30:00Z",\n      "unread_count": 2\n    }\n  ]\n}`,
+      codes: [["200","Conversations list"]]
+    },
+    { method:"GET", path:"/api/conversations/{id}/messages", desc:"Fetch messages in a conversation", auth:AUTH,
+      req:`Query params:\n  ?page=1&per_page=50`,
+      res:`{\n  "data": [\n    {\n      "id": 201,\n      "sender_id": 1,\n      "body": "Hi, are you free Friday?",\n      "sent_at": "2025-05-07T08:00:00Z",\n      "read": true\n    }\n  ],\n  "meta": { "total": 40, "page": 1 }\n}`,
+      codes: [["200","Messages returned"],["403","Not a participant"]]
+    },
+    { method:"POST", path:"/api/conversations/{id}/messages", desc:"Send a message", auth:AUTH,
+      req:`{\n  "body": "Hi, are you free Friday?"\n}`,
+      res:`{\n  "message": {\n    "id": 201,\n    "sender_id": 1,\n    "body": "Hi, are you free Friday?",\n    "sent_at": "2025-05-07T08:00:00Z"\n  }\n}`,
+      codes: [["201","Message sent"],["403","Not a participant"]]
+    },
+  ]},
+  { id: "wallet", label: "Wallet", color: "#3B6D11", endpoints: [
+    { method:"GET", path:"/api/wallet", desc:"Get wallet balance", auth:AUTH,
+      req:`— (no body)`,
+      res:`{\n  "user_id": 1,\n  "balance": 50,\n  "currency": "credits"\n}`,
+      codes: [["200","Balance returned"]]
+    },
+    { method:"GET", path:"/api/wallet/transactions", desc:"Transaction history", auth:AUTH,
+      req:`Query params:\n  ?type=debit  // or credit\n  &page=1`,
+      res:`{\n  "data": [\n    {\n      "id": 55,\n      "type": "debit",\n      "amount": 12,\n      "reason": "session_payment",\n      "session_id": 101,\n      "balance_after": 38,\n      "created_at": "2025-05-07T10:30:00Z"\n    }\n  ],\n  "meta": { "total": 12 }\n}`,
+      codes: [["200","Transaction history"]]
+    },
+  ]},
+  { id: "reputation", label: "Reputation", color: "#993C1D", endpoints: [
+    { method:"POST", path:"/api/sessions/{id}/review", desc:"Submit review after session", auth:AUTH,
+      req:`{\n  "rating": 5,\n  "comment": "Excellent explanation, very patient."\n}`,
+      res:`{\n  "message": "Review submitted.",\n  "review": {\n    "id": 30,\n    "session_id": 101,\n    "reviewer_id": 1,\n    "rating": 5,\n    "comment": "Excellent explanation, very patient.",\n    "created_at": "2025-05-07T12:00:00Z"\n  }\n}`,
+      codes: [["201","Review submitted"],["409","Already reviewed"],["403","Session not completed"]]
+    },
+    { method:"GET", path:"/api/users/{id}/reputation", desc:"Get reputation & trust score", auth:AUTH,
+      req:`— (no body)`,
+      res:`{\n  "user_id": 5,\n  "reputation_score": 92.1,\n  "trust_score": 0.94,\n  "algorithm": "pagerank_inspired_O(V+E)",\n  "total_reviews": 47,\n  "avg_rating": 4.8,\n  "breakdown": {\n    "rating_component": 0.48,\n    "graph_trust_component": 0.32,\n    "activity_component": 0.14\n  }\n}`,
+      codes: [["200","Reputation data"],["404","User not found"]]
+    },
+    { method:"GET", path:"/api/users/{id}/reviews", desc:"List reviews received", auth:AUTH,
+      req:`Query params:\n  ?page=1&per_page=10`,
+      res:`{\n  "data": [\n    {\n      "id": 30,\n      "reviewer": { "id":1, "name":"Aisha Raza" },\n      "rating": 5,\n      "comment": "Excellent explanation.",\n      "created_at": "2025-05-07T12:00:00Z"\n    }\n  ],\n  "meta": { "total":47 }\n}`,
+      codes: [["200","Reviews listed"]]
+    },
+  ]},
+  { id: "recommend", label: "Recommendations", color: "#534AB7", endpoints: [
+    { method:"GET", path:"/api/recommendations/skills", desc:"Personalized skill recommendations", auth:AUTH,
+      req:`Query params:\n  ?limit=10`,
+      res:`{\n  "recommendations": [\n    {\n      "skill_id": 20,\n      "title": "React.js Fundamentals",\n      "reason": "popular_in_your_network",\n      "score": 0.87,\n      "mentor_count": 12\n    }\n  ],\n  "algorithm": "collaborative_filtering"\n}`,
+      codes: [["200","Recommendations returned"]]
+    },
+    { method:"GET", path:"/api/recommendations/mentors", desc:"Mentor suggestions for you", auth:AUTH,
+      req:`Query params:\n  ?skill_id=15&limit=5`,
+      res:`{\n  "mentors": [\n    {\n      "user_id": 8,\n      "name": "Sara Malik",\n      "composite_score": 91.2,\n      "reason": "high_trust_in_network"\n    }\n  ]\n}`,
+      codes: [["200","Mentor suggestions"]]
+    },
+  ]},
+  { id: "admin", label: "Admin", color: "#5F5E5A", endpoints: [
+    { method:"GET", path:"/api/admin/users", desc:"List all users", auth:"🔒 admin role",
+      req:`Query params:\n  ?search=aisha&role=mentor&page=1`,
+      res:`{\n  "data": [ { "id":1, "name":"...", "role":"mentor", "status":"active" } ],\n  "meta": { "total":540 }\n}`,
+      codes: [["200","User list"],["403","Not admin"]]
+    },
+    { method:"DELETE", path:"/api/admin/users/{id}", desc:"Deactivate user account", auth:"🔒 admin role",
+      req:`— (no body)`,
+      res:`{\n  "message": "User deactivated."\n}`,
+      codes: [["200","Deactivated"],["404","User not found"]]
+    },
+    { method:"GET", path:"/api/admin/analytics", desc:"Platform analytics overview", auth:"🔒 admin role",
+      req:`Query params:\n  ?from=2025-04-01&to=2025-05-07`,
+      res:`{\n  "total_users": 540,\n  "active_sessions": 23,\n  "sessions_this_month": 312,\n  "credits_circulating": 18450,\n  "top_skills": ["Python","Design","React"],\n  "avg_match_score": 87.2\n}`,
+      codes: [["200","Analytics data"],["403","Not admin"]]
+    },
+  ]},
+];
+
+const nav = document.getElementById('nav');
+const list = document.getElementById('list');
+let active = 'auth';
+
+function renderNav() {
+  nav.innerHTML = '';
+  modules.forEach(m => {
+    const b = document.createElement('button');
+    b.className = 'nav-btn' + (m.id === active ? ' active' : '');
+    b.textContent = m.label;
+    b.onclick = () => { active = m.id; renderNav(); renderList(); };
+    nav.appendChild(b);
+  });
+}
+
+function renderList() {
+  list.innerHTML = '';
+  const mod = modules.find(m => m.id === active);
+  mod.endpoints.forEach((ep, i) => {
+    const el = document.createElement('div');
+    el.className = 'ep';
+    el.innerHTML = `
+      <div class="ep-header" onclick="toggle(this)">
+        <span class="method ${ep.method}">${ep.method}</span>
+        <span class="ep-path">${ep.path}</span>
+        <span class="ep-desc">${ep.desc}</span>
+        <span class="auth-badge">${ep.auth === OPEN ? 'public' : ep.auth.replace('🔒 ','🔒 ')}</span>
+        <i class="ti ti-chevron-down chevron" aria-hidden="true"></i>
+      </div>
+      <div class="ep-body" id="body-${active}-${i}">
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab(this,'req','${active}-${i}')">request</button>
+          <button class="tab" onclick="switchTab(this,'res','${active}-${i}')">response</button>
+          <button class="tab" onclick="switchTab(this,'codes','${active}-${i}')">status codes</button>
+        </div>
+        <div class="tab-pane active" id="req-${active}-${i}"><pre>${ep.req}</pre></div>
+        <div class="tab-pane" id="res-${active}-${i}"><pre>${ep.res}</pre></div>
+        <div class="tab-pane" id="codes-${active}-${i}">
+          ${ep.codes.map(([c,d]) => `<div class="sc-row"><span class="sc ${c.startsWith('2')?'sc-2xx':c.startsWith('4')?'sc-4xx':'sc-5xx'}">${c}</span><span class="sc-desc">${d}</span></div>`).join('')}
+        </div>
+      </div>`;
+    list.appendChild(el);
+  });
+}
+
+function toggle(header) {
+  const ep = header.parentElement;
+  const body = header.nextElementSibling;
+  ep.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+function switchTab(btn, pane, id) {
+  const body = document.getElementById('body-' + id);
+  body.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  body.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(pane + '-' + id).classList.add('active');
+}
+
+renderNav();
+renderList();
+</script>
