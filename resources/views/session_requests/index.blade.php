@@ -17,6 +17,16 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="alert alert-danger bg-danger bg-opacity-10 border-danger text-danger mb-4">
+            <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <ul class="nav nav-pills mb-4" id="requestsTab" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active rounded-pill px-4" id="incoming-tab" data-bs-toggle="pill" data-bs-target="#incoming" type="button" role="tab" aria-controls="incoming" aria-selected="true">
@@ -93,42 +103,44 @@
                                             </form>
                                             
                                             <!-- Reject Modal Trigger -->
-                                            <button type="button" class="btn btn-outline-danger rounded-pill w-100" data-bs-toggle="modal" data-bs-target="#rejectModal{{ $request->id }}">
+                                            <button type="button" class="btn btn-outline-danger rounded-pill w-100" data-bs-toggle="modal" data-bs-target="#rejectModal_{{ $request->id }}">
                                                 <i class="bi bi-x-lg me-1"></i> Reject
                                             </button>
-                                        </div>
-
-                                        <!-- Reject Modal -->
-                                        <div class="modal fade" id="rejectModal{{ $request->id }}" tabindex="-1" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content bg-dark border-secondary">
-                                                    <form action="{{ route('session-requests.update', $request->id) }}" method="POST">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <input type="hidden" name="action" value="reject">
-                                                        
-                                                        <div class="modal-header border-secondary">
-                                                            <h5 class="modal-title text-white">Decline Request</h5>
-                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <div class="mb-3">
-                                                                <label class="form-label text-muted small">Reason for declining (sent to learner)</label>
-                                                                <textarea class="form-control bg-dark border-secondary text-white" name="rejection_reason" rows="3" required placeholder="e.g. Time conflict, please propose another time..."></textarea>
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer border-secondary">
-                                                            <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
-                                                            <button type="submit" class="btn btn-danger rounded-pill">Confirm Rejection</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
                                         </div>
                                     @endif
                                 </div>
                             </div>
                         </div>
+
+                        @if($request->status === 'pending')
+                        <!-- Reject Modal -->
+                        <div class="modal fade" id="rejectModal_{{ $request->id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content bg-dark border-secondary">
+                                    <form action="{{ route('session-requests.update', $request->id) }}" method="POST">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="hidden" name="action" value="reject">
+                                        
+                                        <div class="modal-header border-secondary">
+                                            <h5 class="modal-title text-white">Decline Request</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="form-label text-muted small">Reason for declining (sent to learner)</label>
+                                                <textarea class="form-control bg-dark border-secondary text-white" name="rejection_reason" rows="3" required placeholder="e.g. Time conflict, please propose another time..."></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-secondary">
+                                            <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-danger rounded-pill">Confirm Rejection</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
                     @endforeach
                 </div>
             @endif

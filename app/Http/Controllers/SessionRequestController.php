@@ -122,7 +122,7 @@ class SessionRequestController extends Controller
                 $sessionRequest->update(['status' => 'accepted']);
                 
                 // Create the scheduled session
-                Session::create([
+                $session = Session::create([
                     'request_id' => $sessionRequest->id,
                     'learner_id' => $sessionRequest->learner_id,
                     'mentor_id' => $sessionRequest->mentor_id,
@@ -140,6 +140,7 @@ class SessionRequestController extends Controller
                     'title' => 'Session Accepted!',
                     'body' => 'Your request for ' . $sessionRequest->userSkill->skill->title . ' has been accepted.',
                     'related_entity_type' => 'session',
+                    'related_entity_id' => $session->id,
                     'created_at' => now(),
                 ]);
 
@@ -161,6 +162,7 @@ class SessionRequestController extends Controller
                     'title' => 'Session Declined',
                     'body' => 'Your request for ' . $sessionRequest->userSkill->skill->title . ' was declined.',
                     'related_entity_type' => 'session_request',
+                    'related_entity_id' => $sessionRequest->id,
                     'created_at' => now(),
                 ]);
 
@@ -171,7 +173,8 @@ class SessionRequestController extends Controller
             return redirect()->route('session-requests.index')->with('success', $message);
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'An error occurred while processing the request.']);
+            \Illuminate\Support\Facades\Log::error('SessionRequestUpdateError: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'An error occurred: ' . $e->getMessage()]);
         }
     }
 
