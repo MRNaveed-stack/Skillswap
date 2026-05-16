@@ -5,21 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasUuids;
+    use HasFactory, Notifiable;
 
     protected $fillable = [
+        'name',
         'email',
+        'password',
         'password_hash',
         'role',
         'is_active',
     ];
 
     protected $hidden = [
-        'password_hash',
+        'password',
     ];
 
     protected function casts(): array
@@ -27,13 +27,12 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'is_active' => 'boolean',
-            'password_hash' => 'hashed',
         ];
     }
 
     public function getAuthPassword()
     {
-        return $this->password_hash;
+        return $this->password ?? $this->password_hash;
     }
 
     public function getRememberTokenName()

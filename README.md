@@ -54,6 +54,12 @@ In order to ensure that the Laravel community is welcoming to all, please review
 
 If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
+## Deployment Notes
+
+This project should be deployed from Laravel migrations, not from `database.sql`.
+
+For a single EC2 instance, set `SESSION_DRIVER=file` in `.env`, then run `php artisan migrate:fresh --force` against the production database if it was created from `database.sql`. After that, run `npm install` and `npm run build`, then restart PHP-FPM and Nginx.
+
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

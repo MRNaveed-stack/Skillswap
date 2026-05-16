@@ -28,11 +28,11 @@ class TestFlow extends Command
             $uniq = uniqid();
             // 1. Create Users
             $this->info('1. Creating Test Users...');
-            $mentor = User::create(['email' => "mentor_$uniq@example.com", 'password_hash' => Hash::make('password')]);
+            $mentor = User::create(['name' => 'Test Mentor', 'email' => "mentor_$uniq@example.com", 'password' => Hash::make('password')]);
             Profile::create(['user_id' => $mentor->id, 'full_name' => 'Test Mentor']);
             Wallet::create(['user_id' => $mentor->id, 'balance' => 10.00]);
 
-            $learner = User::create(['email' => "learner_$uniq@example.com", 'password_hash' => Hash::make('password')]);
+            $learner = User::create(['name' => 'Test Learner', 'email' => "learner_$uniq@example.com", 'password' => Hash::make('password')]);
             Profile::create(['user_id' => $learner->id, 'full_name' => 'Test Learner']);
             Wallet::create(['user_id' => $learner->id, 'balance' => 20.00]); // Give learner more to spend
 

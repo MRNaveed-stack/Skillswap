@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class AuthController extends Controller
 {
@@ -26,7 +27,7 @@ class AuthController extends Controller
 
         $user = User::where('email', $credentials['email'])->first();
 
-        if ($user && Hash::check($credentials['password'], $user->password_hash)) {
+        if ($user && is_string($user->getAuthPassword()) && Hash::check($credentials['password'], $user->getAuthPassword())) {
             if (!$user->is_active) {
                 return back()->withErrors([
                     'email' => 'Your account has been deactivated.',
@@ -55,40 +56,44 @@ class AuthController extends Controller
             'full_name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'in:user,admin']
+            'role' => ['nullable', 'in:user,admin']
         ]);
 
-        DB::beginTransaction();
-
         try {
-            $user = User::create([
-                'email' => $request->email,
-                'password_hash' => Hash::make($request->password),
-                'role' => $request->role ?? 'user',
-            ]);
+            $user = DB::transaction(function () use ($request) {
+                $displayName = $request->input('name', $request->full_name);
+                $passwordColumn = Schema::hasColumn('users', 'password') ? 'password' : 'password_hash';
 
-            Profile::create([
-                'user_id' => $user->id,
-                'full_name' => $request->full_name,
-            ]);
+                $user = User::create([
+                    'name' => $displayName,
+                    'email' => $request->email,
+                    'role' => $request->input('role', 'user'),
+                    'is_active' => true,
+                ] + [$passwordColumn => Hash::make($request->password)]);
 
-            // Create wallet with starting credits - use firstOrCreate for idempotency
-            Wallet::firstOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'balance' => 10.00,
-                    'total_earned' => 10.00,
-                    'total_spent' => 0.00,
-                ]
-            );
+                Profile::create([
+                    'user_id' => $user->id,
+                    'full_name' => $displayName,
+                ]);
 
-            DB::commit();
+                // Create wallet with starting credits - use firstOrCreate for idempotency
+                Wallet::firstOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'balance' => 10.00,
+                        'total_earned' => 10.00,
+                        'total_spent' => 0.00,
+                    ]
+                );
+
+                return $user;
+            });
 
             Auth::login($user);
 
             return redirect('/');
-        } catch (\Exception $e) {
-            DB::rollBack();
+        } catch (\Throwable $e) {
+            report($e);
             return back()->withErrors(['error' => 'Registration failed. Please try again.'])->withInput();
         }
     }
